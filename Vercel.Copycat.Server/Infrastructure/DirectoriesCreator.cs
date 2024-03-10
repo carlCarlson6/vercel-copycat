@@ -1,18 +1,25 @@
 namespace Vercel.Copycat.Server.Infrastructure;
 
-public class DirectoriesCreator(RepositoryConfig repoConfig) : BackgroundService
+public class DirectoriesCreator : BackgroundService
 {
+    private readonly DirectoriesConfig _directories;
+
+    public DirectoriesCreator(DirectoriesConfig directories)
+    {
+        _directories = directories;
+    }
+
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (Directory.Exists(repoConfig.WorkingDirectory))
+        if (Directory.Exists(_directories.GitDirectory))
             return Task.CompletedTask;
         
-        Directory.CreateDirectory(repoConfig.WorkingDirectory);
+        Directory.CreateDirectory(_directories.GitDirectory);
         return Task.CompletedTask;
     }
 }
 
-public class RepositoryConfig
+public class DirectoriesConfig
 {
-    public string WorkingDirectory { get; init; }
-} 
+    public string GitDirectory { get; init; } = "./git-working-directory";
+}
