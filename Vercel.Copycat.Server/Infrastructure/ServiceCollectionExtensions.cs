@@ -7,7 +7,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration config, IWebHostEnvironment env) =>
         services
             .AddDirectoriesCreator(config)
-            .AddUploadServices()
+            .AddUploadServices(config)
             .AddRebusMessaging(config)
             .AddMartenDb(config, env)
             .AddMediator();

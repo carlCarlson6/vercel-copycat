@@ -12,16 +12,20 @@ public interface IDeploymentFilesStorage
 public class DeploymentFileAzureBlobStorage: IDeploymentFilesStorage
 {
     private readonly BlobClient _blob;
+    private readonly BlobContainerClient _blobContainerClient;
     private readonly DirectoriesConfig _directories;
     
     public DeploymentFileAzureBlobStorage(BlobContainerClient containerClient, DirectoriesConfig directories)
     {
         _blob = containerClient.GetBlobClient("repo-files");
         _directories = directories;
+        _blobContainerClient = containerClient;
     }
     
     public async Task Upload(DeploymentDocument deploymentDoc)
     {
+        _blobContainerClient.
+        
         var filesPath = $"{_directories.GitDirectory}/{deploymentDoc.DeploymentId()}";
         await _blob.UploadAsync(path: filesPath, overwrite: true);
         
