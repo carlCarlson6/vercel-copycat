@@ -1,7 +1,7 @@
 using Azure.Storage.Blobs;
 using Vercel.Copycat.Server.Infrastructure;
 
-namespace Vercel.Copycat.Server.Services.Upload;
+namespace Vercel.Copycat.Server.Projects;
 
 public static class ServiceCollectionExtensions
 {

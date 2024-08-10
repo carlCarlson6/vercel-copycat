@@ -1,10 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>c68ba579-5883-463c-8fe8-b2685601b73b</UserSecretsId>
+        <LangVersion>latestmajor</LangVersion>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,11 +17,14 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="NRedisStack" Version="0.12.0" />
       <PackageReference Include="OneOf" Version="3.0.263" />
       <PackageReference Include="OneOf.SourceGenerator" Version="3.0.263" />
       <PackageReference Include="Rebus" Version="8.2.2" />
       <PackageReference Include="Rebus.AzureQueues" Version="4.0.0" />
       <PackageReference Include="Rebus.ServiceProvider" Version="10.1.1" />
+      <PackageReference Include="StackExchange.Redis" Version="2.8.0" />
+      <PackageReference Include="StackExchange.Redis.Extensions.Core" Version="10.2.0" />
     </ItemGroup>
 
     <ItemGroup>

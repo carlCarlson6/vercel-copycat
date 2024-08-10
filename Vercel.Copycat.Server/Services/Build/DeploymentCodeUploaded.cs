@@ -1,3 +1,5 @@
+using Vercel.Copycat.Server.Core;
+
 namespace Vercel.Copycat.Server.Services.Build;
 
-public record DeploymentCodeUploaded(string DeploymentId);
+public record DeploymentCodeUploaded(Guid Id, Guid ProjectId) : IEvent;

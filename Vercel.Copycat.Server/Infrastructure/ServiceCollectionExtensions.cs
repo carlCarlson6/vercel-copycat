@@ -1,4 +1,4 @@
-using Vercel.Copycat.Server.Services.Upload;
+using Vercel.Copycat.Server.Projects;
 
 namespace Vercel.Copycat.Server.Infrastructure;
 
@@ -8,9 +8,9 @@ public static class ServiceCollectionExtensions
         services
             .AddDirectoriesCreator(config)
             .AddUploadServices(config)
-            .AddRebusMessaging(config)
-            .AddMartenDb(config, env)
-            .AddMediator();
+            .AddRedisCore(config)
+            .AddRedisMessaging()
+            .AddMediator(x => x.ServiceLifetime = ServiceLifetime.Singleton);
 
     private static IServiceCollection AddDirectoriesCreator(this IServiceCollection services, IConfiguration config)
     {

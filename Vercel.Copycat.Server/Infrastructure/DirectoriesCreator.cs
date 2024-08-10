@@ -1,20 +1,13 @@
 namespace Vercel.Copycat.Server.Infrastructure;
 
-public class DirectoriesCreator : BackgroundService
+public class DirectoriesCreator(DirectoriesConfig directories) : BackgroundService
 {
-    private readonly DirectoriesConfig _directories;
-
-    public DirectoriesCreator(DirectoriesConfig directories)
-    {
-        _directories = directories;
-    }
-
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (Directory.Exists(_directories.GitDirectory))
+        if (Directory.Exists(directories.GitDirectory))
             return Task.CompletedTask;
         
-        Directory.CreateDirectory(_directories.GitDirectory);
+        Directory.CreateDirectory(directories.GitDirectory);
         return Task.CompletedTask;
     }
 }
