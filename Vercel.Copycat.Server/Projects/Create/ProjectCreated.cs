@@ -2,8 +2,8 @@ using System.Text.Json;
 using Mediator;
 using StackExchange.Redis;
 using Vercel.Copycat.Server.Core;
+using Vercel.Copycat.Server.Deployments;
 using Vercel.Copycat.Server.Infrastructure;
-using Vercel.Copycat.Server.Services.Build;
 
 namespace Vercel.Copycat.Server.Projects.Create;
 
@@ -34,8 +34,7 @@ public class ProjectCreatedHandler(
         var deploymentFolder = $"{directoriesConfig.GitDirectory}/{projectId}";
         Directory.CreateDirectory(deploymentFolder);
         await git.Clone(projectDoc);
-        //Directory.Delete($"{deploymentFolder}/.git", true);
-
+        
         await builder.BuildProject(projectDoc);
         
         await storage.Upload(projectDoc);

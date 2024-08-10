@@ -4,9 +4,9 @@ using Mediator;
 using static System.String;
 using StackExchange.Redis;
 using Vercel.Copycat.Server.Core;
+using Vercel.Copycat.Server.Deployments;
 using Vercel.Copycat.Server.Projects;
 using Vercel.Copycat.Server.Projects.Create;
-using Vercel.Copycat.Server.Services.Build;
 using static Vercel.Copycat.Server.Infrastructure.RedisMessaging;
 
 namespace Vercel.Copycat.Server.Infrastructure;

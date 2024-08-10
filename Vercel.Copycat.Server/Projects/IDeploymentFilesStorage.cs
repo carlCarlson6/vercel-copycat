@@ -17,7 +17,7 @@ public class DeploymentFileAzureBlobStorage(
 {
     public async Task Upload(ProjectDocument projectDoc)
     {
-        var path = $"{directories.GitDirectory}/{projectDoc.ProjectId()}/dist";
+        var path = $"{directories.GitDirectory}/{projectDoc.ProjectId()}/{projectDoc.BuildOutputPath}";
         var filesPath = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
         foreach (var filePath in filesPath)
         {

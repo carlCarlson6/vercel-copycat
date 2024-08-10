@@ -7,7 +7,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration config, IWebHostEnvironment env) =>
         services
             .AddDirectoriesCreator(config)
-            .AddUploadServices(config)
+            .AddProjectServices(config)
             .AddRedisCore(config)
             .AddRedisMessaging()
             .AddMediator(x => x.ServiceLifetime = ServiceLifetime.Singleton);

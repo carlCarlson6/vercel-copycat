@@ -1,6 +1,6 @@
 namespace Vercel.Copycat.Server.Core;
 
-public record ProjectDocument(string Id, string Name ,string RepoUrl)
+public record ProjectDocument(string Id, string Name, string RepoUrl, string BuildOutputPath)
 {
     public Guid ProjectId() => Guid.Parse(Id.Replace("projects:", ""));
     

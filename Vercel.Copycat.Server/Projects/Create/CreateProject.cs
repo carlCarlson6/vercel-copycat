@@ -8,7 +8,7 @@ using static System.String;
 
 namespace Vercel.Copycat.Server.Projects.Create;
 
-public record CreateProjectRequest(string RepoUrl, string Name) : IRequest<CreateProjectResponse>;
+public record CreateProjectRequest(string RepoUrl, string Name, string BuildOutputPath = "build") : IRequest<CreateProjectResponse>;
 
 [GenerateOneOf]
 public partial class CreateProjectResponse : OneOfBase<
@@ -24,7 +24,7 @@ public class CreateDeploymentHandler(IBus bus, IDatabase db, ILogger<CreateDeplo
     {
         logger.LogInformation("handling create project request");
         
-        var (repoUrl, projectName) = request;
+        var (repoUrl, projectName, buildOutputPath) = request;
         if (IsNullOrWhiteSpace(repoUrl) || IsNullOrWhiteSpace(projectName))
         {
             logger.LogWarning("missing data on the request");
@@ -35,7 +35,7 @@ public class CreateDeploymentHandler(IBus bus, IDatabase db, ILogger<CreateDeplo
         
         logger.LogInformation("storing new project doc");
         
-        var project = new ProjectDocument(deploymentDocId, projectName, repoUrl);
+        var project = new ProjectDocument(deploymentDocId, projectName, repoUrl, buildOutputPath);
 
         var projectCreated = new ProjectCreated(Guid.NewGuid(), project.ProjectId());
         var transaction = db.CreateTransaction();
