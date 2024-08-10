@@ -3,6 +3,7 @@ using Mediator;
 using OneOf;
 using StackExchange.Redis;
 using Vercel.Copycat.Server.Core;
+using Vercel.Copycat.Server.Infrastructure;
 using static System.String;
 
 namespace Vercel.Copycat.Server.Projects.Create;
@@ -36,15 +37,12 @@ public class CreateDeploymentHandler(IBus bus, IDatabase db, ILogger<CreateDeplo
         
         var project = new ProjectDocument(deploymentDocId, projectName, repoUrl);
 
+        var projectCreated = new ProjectCreated(Guid.NewGuid(), project.ProjectId());
         var transaction = db.CreateTransaction();
         
-        var success = await transaction.StringSetAsync(project.Id, JsonSerializer.Serialize(project));
-        if (!success)
-        {
-            logger.LogError("error while storing project");
-            return new ProblemCreatingProject();
-        }
-
+        _ = transaction.StringSetAsync(project.Id, JsonSerializer.Serialize(project));
+        _ = transaction.ListRightPushAsync(ProjectEventsStreamDocument.BuildDocId(project.Id), RedisEvent.Serialize(projectCreated));
+        _ = bus.Publish(projectCreated, transaction);
         var confirmedTransaction = await transaction.ExecuteAsync();
         if (!confirmedTransaction)
         {
@@ -52,10 +50,7 @@ public class CreateDeploymentHandler(IBus bus, IDatabase db, ILogger<CreateDeplo
             return new ProblemCreatingProject();
         }
 
-        var @event = new ProjectCreated(Guid.NewGuid(), project.ProjectId());
-        await bus.Publish(@event);
-
-        return @event;
+        return projectCreated;
     }
     
     

@@ -1,5 +1,6 @@
 using Mediator;
 using OneOf;
+using Vercel.Copycat.Server.Projects.Create;
 using Vercel.Copycat.Server.Services.Build;
 using static System.Text.Json.JsonSerializer;
 
@@ -11,9 +12,9 @@ public partial class Event : OneOfBase<
     DeploymentCodeUploaded
 >, IEvent
 {
-    public Guid Id => Match(
-        x => x.Id,
-        x => x.Id);
+    public Guid EventId => Match(
+        x => x.EventId,
+        x => x.EventId);
     
     public Guid ProjectId => Match(
         x => x.ProjectId,
@@ -30,11 +31,9 @@ public partial class Event : OneOfBase<
 
 public interface IEvent : IRequest
 {
-    public Guid Id { get; }
+    public Guid EventId { get; }
     public Guid ProjectId { get; }
 }
-
-public record ProjectCreated(Guid Id, Guid ProjectId) : IEvent;
 
 public interface IEventConsumer
 {

@@ -13,7 +13,7 @@ public static class CreateProjectEndpoint
     {
         var response = await sender.Send(body);
         return response.Match(
-            created     => Results.Created(created.Id.ToString(), null),
+            created     => Results.Created(created.ProjectId.ToString(), null),
             missingData => Results.BadRequest(),
             project     => Results.Problem());
     });

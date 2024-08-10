@@ -1,9 +1,11 @@
 using System.Text;
+using System.Text.Json;
 using Mediator;
 using static System.String;
-using static System.Text.Json.JsonSerializer;
 using StackExchange.Redis;
 using Vercel.Copycat.Server.Core;
+using Vercel.Copycat.Server.Projects;
+using Vercel.Copycat.Server.Projects.Create;
 using Vercel.Copycat.Server.Services.Build;
 using static Vercel.Copycat.Server.Infrastructure.RedisMessaging;
 
@@ -52,20 +54,39 @@ public class RedisBus(ISubscriber subscriber) : IBus
 {
     public async Task<Unit> Publish(Event @event)
     {
-        var redisEvent = new RedisEventMessage(
+        await subscriber.PublishAsync(Queue, RedisEvent.Serialize(@event));
+        return Unit.Value;
+    }
+
+    public async Task<Unit> Publish(Event @event, ITransaction transaction)
+    {
+        await transaction.PublishAsync(Queue, RedisEvent.Serialize(@event));
+        return Unit.Value;
+    }
+
+    private static string Serialize(Event @event)
+    {
+        var redisEvent = new RedisEvent(
             @event.TypeName,
             @event.ToSerializedMessage());
-        await subscriber.PublishAsync(Queue, Serialize(redisEvent));
-        return Unit.Value;
+        return JsonSerializer.Serialize(redisEvent);
     }
 }
 
-public record RedisEventMessage(string Type, string Content)
+public record RedisEvent(string Type, string Content)
 {
+    public static string Serialize(Event @event)
+    {
+        var redisEvent = new RedisEvent(
+            @event.TypeName,
+            @event.ToSerializedMessage());
+        return JsonSerializer.Serialize(redisEvent);
+    }
+    
     public Event ToDomainEvent() => Type switch
     {
-        nameof(ProjectCreated)           => new Event(Deserialize<ProjectCreated>(Content)),
-        nameof(DeploymentCodeUploaded)   => new Event(Deserialize<DeploymentCodeUploaded>(Content)),
+        nameof(ProjectCreated)           => new Event(JsonSerializer.Deserialize<ProjectCreated>(Content)),
+        nameof(DeploymentCodeUploaded)   => new Event(JsonSerializer.Deserialize<DeploymentCodeUploaded>(Content)),
         _ => throw new ArgumentException(),
     };
 }
@@ -86,7 +107,7 @@ public class RedisConsumerBackgroundService(
     {
         try
         {
-            var redisEvent = Deserialize<RedisEventMessage>(message!);
+            var redisEvent = JsonSerializer.Deserialize<RedisEvent>(message!);
             var @event = redisEvent?.ToDomainEvent() ?? throw new ArgumentException();
             await Consume(@event);
         }

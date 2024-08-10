@@ -6,18 +6,20 @@ namespace Vercel.Copycat.Server.Projects;
 
 public interface IGit
 {
-    Task Clone(ProjectDocument projectDoc);
+    Task<string> Clone(ProjectDocument projectDoc);
 }
 
-public class GitCli : IGit
+public class GitCli(DirectoriesConfig directories) : IGit
 {
-    private readonly DirectoriesConfig _directories;
-    public GitCli(DirectoriesConfig directories) => _directories = directories;
-
-    public async Task Clone(ProjectDocument projectDoc)
+    public async Task<string> Clone(ProjectDocument projectDoc)
     {
         using var process = new Process();
-
+        await ExecuteClone(projectDoc, process);
+        return await ReadCurrentHash(projectDoc, process);
+    }
+    
+    private async Task ExecuteClone(ProjectDocument projectDoc, Process process)    
+    {
         var startInfo = new ProcessStartInfo
         {
             FileName = "/bin/bash",
@@ -26,7 +28,7 @@ public class GitCli : IGit
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
-            WorkingDirectory = $"{_directories.GitDirectory}/{projectDoc.ProjectId()}"
+            WorkingDirectory = $"{directories.GitDirectory}/{projectDoc.ProjectId()}"
         };
         
         process.EnableRaisingEvents = false; // if this is true, when throwing the error breaks and ends the execution of the server
@@ -34,7 +36,7 @@ public class GitCli : IGit
         process.StartInfo = startInfo;
             
         process.Start();
-        var command = $"git clone {projectDoc.RepoUrl}";
+        var command = $"git clone {projectDoc.RepoUrl} .";
         await process.StandardInput.WriteLineAsync(command.Replace("^?", ""));
         await process.StandardInput.WriteLineAsync("exit");
             
@@ -43,6 +45,8 @@ public class GitCli : IGit
         await process.WaitForExitAsync();
     }
     
+    private Task<string> ReadCurrentHash(ProjectDocument projectDoc, Process process) => Task.FromResult(string.Empty);
+
     private static void ProcessExitedHandler(object? sender, EventArgs e)
     {
         if (sender is null) throw new Exception("Process was closed unexpectedly");

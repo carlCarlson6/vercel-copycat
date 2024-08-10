@@ -7,7 +7,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddUploadServices(this IServiceCollection services, IConfiguration config) => services
         .AddSingleton<IGit, GitCli>()
+        .AddSingleton<IBuilder, Builder>()
         .AddSingleton<IDeploymentFilesStorage>(s => new DeploymentFileAzureBlobStorage(
-            containerClient: new BlobContainerClient(config.GetConnectionString("blob-storage"), "repo-files"), 
+            containerClient: new BlobContainerClient(config.GetConnectionString("blob-storage"), "apps"), 
             directories:     s.GetRequiredService<DirectoriesConfig>()));
 }

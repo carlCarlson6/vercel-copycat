@@ -9,18 +9,22 @@ public interface IDeploymentFilesStorage
     Task Upload(ProjectDocument projectDoc);
 }
 
-public class DeploymentFileAzureBlobStorage(BlobContainerClient containerClient, DirectoriesConfig directories)
+public class DeploymentFileAzureBlobStorage(
+    BlobContainerClient containerClient, 
+    DirectoriesConfig directories
+) 
     : IDeploymentFilesStorage
 {
-    private readonly BlobClient _blob = containerClient.GetBlobClient("repo-files");
-    private readonly BlobContainerClient _blobContainerClient = containerClient;
-
     public async Task Upload(ProjectDocument projectDoc)
     {
-        
-        var filesPath = $"{directories.GitDirectory}/{projectDoc.ProjectId()}";
-        await _blob.UploadAsync(path: filesPath, overwrite: true);
-        
-        throw new NotImplementedException();
+        var path = $"{directories.GitDirectory}/{projectDoc.ProjectId()}/dist";
+        var filesPath = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
+        foreach (var filePath in filesPath)
+        {
+            var blobName = filePath.Replace($"{path}/", "").Replace("\\", "/");
+            await using var fs = File.Open(filePath, FileMode.Open);
+            var blob = containerClient.GetBlobClient($"{projectDoc.ProjectId()}/{blobName}");
+            await blob.UploadAsync(fs);
+        }
     }
 }
