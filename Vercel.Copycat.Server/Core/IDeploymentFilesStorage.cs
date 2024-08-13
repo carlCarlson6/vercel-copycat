@@ -4,7 +4,8 @@ namespace Vercel.Copycat.Server.Core;
 
 public interface IDeploymentFilesStorage
 {
-    Task Upload(Guid projectId, string buildOutputPath);
+    Task<Dictionary<string, BlobClient>> Upload(Guid deploymentId, string buildOutputPath);
+    BlobClient GetBlob(Guid deploymentId, string fileName);
 }
 
 public class DeploymentFileAzureBlobStorage(
@@ -13,16 +14,26 @@ public class DeploymentFileAzureBlobStorage(
 ) 
     : IDeploymentFilesStorage
 {
-    public async Task Upload(Guid projectId, string buildOutputPath)
+    public async Task<Dictionary<string, BlobClient>> Upload(Guid deploymentId, string buildOutputPath)
     {
-        var path = $"{directories.GitDirectory}/{projectId}/{buildOutputPath}";
+        var uploadedFiles = new Dictionary<string, BlobClient>();
+        var path = $"{directories.GitDirectory}/{deploymentId}/{buildOutputPath}";
         var filesPath = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
         foreach (var filePath in filesPath)
         {
-            var blobName = filePath.Replace($"{path}/", "").Replace("\\", "/");
-            var blob = containerClient.GetBlobClient($"{projectId}/{blobName}");
+            var fileName = filePath.Replace($"{path}/", "").Replace("\\", "/");
+            var blobName = $"{deploymentId}/{fileName}";
+            
+            var blob = containerClient.GetBlobClient(blobName);
             await using var fs = File.Open(filePath, FileMode.Open);
             await blob.UploadAsync(fs, overwrite: true);
+            
+            uploadedFiles.Add(fileName, blob);
         }
+        
+        return uploadedFiles;
     }
+
+    public BlobClient GetBlob(Guid deploymentId, string fileName) => containerClient
+        .GetBlobClient($"{deploymentId}/{fileName}");
 }

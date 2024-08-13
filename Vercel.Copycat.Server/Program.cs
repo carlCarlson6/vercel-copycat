@@ -1,6 +1,6 @@
+using Vercel.Copycat.Server.Deployments.Visit;
 using Vercel.Copycat.Server.Infrastructure;
 using Vercel.Copycat.Server.Projects;
-using Vercel.Copycat.Server.VisitDeployment;
 
 var builder = WebApplication.CreateBuilder(args);
 

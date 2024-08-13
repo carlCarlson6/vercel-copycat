@@ -1,6 +1,6 @@
 using Azure.Storage.Blobs;
 using Vercel.Copycat.Server.Core;
-using Vercel.Copycat.Server.VisitDeployment;
+using Vercel.Copycat.Server.Deployments.Visit;
 
 namespace Vercel.Copycat.Server.Infrastructure;
 

@@ -1,42 +1,31 @@
-using System.Diagnostics;
-
 namespace Vercel.Copycat.Server.Core;
 
 public record GitCommitInfo(string Hash, string Message);
 
 public interface IGit
 {
-    Task<GitCommitInfo> Clone(Guid projectId, string repoUrl);
+    Task<GitCommitInfo> Clone(Guid deploymentId, string repoUrl);
 }
 
 public class GitCli(Cli cli, DirectoriesConfig directories) : IGit
 {
-    public async Task<GitCommitInfo> Clone(Guid projectId, string repoUrl)
+    public async Task<GitCommitInfo> Clone(Guid deploymentId, string repoUrl)
     {
-        await ExecuteClone(projectId, repoUrl);
-        var hash = await ReadCurrentHash(projectId);
-        var message = await ReadCurrentCommitMessage(projectId);
+        await ExecuteClone(deploymentId, repoUrl);
+        var hash = await ReadCurrentHash(deploymentId);
+        var message = await ReadCurrentCommitMessage(deploymentId);
         return new GitCommitInfo(hash, message);
     }
     
-    private async Task ExecuteClone(Guid projectId, string repoUrl) => await cli.Execute(
+    private async Task ExecuteClone(Guid deploymentId, string repoUrl) => await cli.Execute(
         $"git clone {repoUrl} .", 
-        $"{directories.GitDirectory}/{projectId}");
+        $"{directories.GitDirectory}/{deploymentId}");
 
-    private Task<string> ReadCurrentHash(Guid projectId) => cli.Execute(
+    private Task<string> ReadCurrentHash(Guid deploymentId) => cli.Execute(
         "git rev-parse HEAD", 
-        $"{directories.GitDirectory}/{projectId}");
+        $"{directories.GitDirectory}/{deploymentId}");
 
-    private Task<string> ReadCurrentCommitMessage(Guid projectId) => cli.Execute(
+    private Task<string> ReadCurrentCommitMessage(Guid deploymentId) => cli.Execute(
         "git log -1 --pretty=%B", 
-        $"{directories.GitDirectory}/{projectId}");
-
-    private static void ProcessExitedHandler(object? sender, EventArgs e)
-    {
-        if (sender is null) throw new Exception("Process was closed unexpectedly");
-        if ((sender as Process)!.ExitCode != 0)
-        {
-            throw new Exception($"The git process fails with code {(sender as Process)!.ExitCode}");
-        }
-    }
+        $"{directories.GitDirectory}/{deploymentId}");
 }

@@ -1,5 +1,3 @@
-using Mediator;
-using OneOf;
 using Orleans.Concurrency;
 using Vercel.Copycat.Server.Core;
 using Vercel.Copycat.Server.Deployments;
@@ -49,7 +47,6 @@ public class Project(
             null, 
             [projectCreated]
         );
-        
         await persistentProjectState.WriteStateAsync();
         
         await grains
@@ -67,18 +64,11 @@ public class Project(
             Events = persistentProjectState.State.Events.Append(deploymentCompleted)
         };
         await persistentProjectState.WriteStateAsync();
+        await grains
+            .GetGrain<ICurrentDeployment>(this.GetGrainId().GetGuidKey())
+            .SetDeployment(deploymentCompleted.DeploymentId);
     }
 }
 
 public record ProjectStatus(string Name, RepoInfo RepoInfo, Guid? CurrentDeploymentId, IEnumerable<IEvent> Events);
 public record RepoInfo(string RepoUrl, string BuildOutputPath);
-
-public record CreateProjectRequest(string RepoUrl, string Name, string BuildOutputPath = "build") : IRequest<CreateProjectResponse>;
-
-[GenerateOneOf]
-public partial class CreateProjectResponse : OneOfBase<
-    ProjectCreated, MissingData, ProblemCreatingProject
->;
-
-public readonly struct MissingData;
-public readonly struct ProblemCreatingProject;
