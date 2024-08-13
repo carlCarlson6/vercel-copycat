@@ -17,6 +17,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Microsoft.Orleans.Server" Version="8.2.0" />
       <PackageReference Include="MimeTypesMap" Version="1.0.8" />
       <PackageReference Include="NRedisStack" Version="0.12.0" />
       <PackageReference Include="OneOf" Version="3.0.263" />
@@ -29,7 +30,14 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="git-working-directory\" />
+      <_ContentIncludedByDefault Remove="git-working-directory\1a2888a0-1918-4373-a856-e0b4c45e52a3\package-lock.json" />
+      <_ContentIncludedByDefault Remove="git-working-directory\1a2888a0-1918-4373-a856-e0b4c45e52a3\package.json" />
+      <_ContentIncludedByDefault Remove="git-working-directory\1a2888a0-1918-4373-a856-e0b4c45e52a3\tsconfig.json" />
+      <_ContentIncludedByDefault Remove="git-working-directory\1a2888a0-1918-4373-a856-e0b4c45e52a3\tsconfig.node.json" />
+      <_ContentIncludedByDefault Remove="git-working-directory\bf24610c-e622-4fee-879b-49cd43911fa6\package-lock.json" />
+      <_ContentIncludedByDefault Remove="git-working-directory\bf24610c-e622-4fee-879b-49cd43911fa6\package.json" />
+      <_ContentIncludedByDefault Remove="git-working-directory\bf24610c-e622-4fee-879b-49cd43911fa6\tsconfig.json" />
+      <_ContentIncludedByDefault Remove="git-working-directory\bf24610c-e622-4fee-879b-49cd43911fa6\tsconfig.node.json" />
     </ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Vercel.Copycat.Server.Projects.Create;
+namespace Vercel.Copycat.Server.Projects;
 
 public static class CreateProjectEndpoint
 {

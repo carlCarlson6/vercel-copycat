@@ -1,12 +1,10 @@
 using Azure.Storage.Blobs;
-using Vercel.Copycat.Server.Core;
-using Vercel.Copycat.Server.Infrastructure;
 
-namespace Vercel.Copycat.Server.Projects;
+namespace Vercel.Copycat.Server.Core;
 
 public interface IDeploymentFilesStorage
 {
-    Task Upload(ProjectDocument projectDoc);
+    Task Upload(Guid projectId, string buildOutputPath);
 }
 
 public class DeploymentFileAzureBlobStorage(
@@ -15,16 +13,16 @@ public class DeploymentFileAzureBlobStorage(
 ) 
     : IDeploymentFilesStorage
 {
-    public async Task Upload(ProjectDocument projectDoc)
+    public async Task Upload(Guid projectId, string buildOutputPath)
     {
-        var path = $"{directories.GitDirectory}/{projectDoc.ProjectId()}/{projectDoc.BuildOutputPath}";
+        var path = $"{directories.GitDirectory}/{projectId}/{buildOutputPath}";
         var filesPath = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
         foreach (var filePath in filesPath)
         {
             var blobName = filePath.Replace($"{path}/", "").Replace("\\", "/");
+            var blob = containerClient.GetBlobClient($"{projectId}/{blobName}");
             await using var fs = File.Open(filePath, FileMode.Open);
-            var blob = containerClient.GetBlobClient($"{projectDoc.ProjectId()}/{blobName}");
-            await blob.UploadAsync(fs);
+            await blob.UploadAsync(fs, overwrite: true);
         }
     }
 }

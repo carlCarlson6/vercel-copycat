@@ -21,11 +21,15 @@ public class VisitDeploymentAssestsMiddleware(BlobContainerClient containerClien
         }
         
         var blob = containerClient.GetBlobClient($"{projectId}/{context.Request.Path}".Replace("//", "/"));
-        var fileExtension = blob.Name.Split(".").LastOrDefault() ?? string.Empty;
-        var contentType = MimeTypesMap.GetMimeType(fileExtension);
-        
         var streaming =  await blob.DownloadStreamingAsync();
-        var result = Results.File(streaming.Value.Content, contentType);
+        
+        var result = Results.File(streaming.Value.Content, GetContentType(blob));
         await result.ExecuteAsync(context);
+    }
+
+    private static string GetContentType(BlobClient blob)
+    {
+        var fileExtension = blob.Name.Split(".").LastOrDefault() ?? string.Empty;
+        return MimeTypesMap.GetMimeType(fileExtension);
     }
 }
