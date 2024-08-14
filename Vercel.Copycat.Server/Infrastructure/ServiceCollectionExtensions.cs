@@ -1,8 +1,9 @@
 using Azure.Storage.Blobs;
 using Orleans.Runtime;
 using Orleans.Storage;
-using Vercel.Copycat.Server.Core;
+using Vercel.Copycat.Server.Deployments;
 using Vercel.Copycat.Server.Deployments.Visit;
+using Vercel.Copycat.Server.Deployments.Workers;
 using Vercel.Copycat.Server.Infrastructure.RavenDb;
 using Vercel.Copycat.Server.Infrastructure.Redis;
 
@@ -17,18 +18,16 @@ public static class ServiceCollectionExtensions
         services
             .AddSingleton<DirectoriesManager>()
             .AddSingleton<VisitDeploymentAssestsMiddleware>()
-            .AddDirectoriesCreator(config)
-            .AddSingleton<Cli>()
+            .AddDirectoriesManager(config)
             .AddSingleton<IGit, GitCli>()
             .AddSingleton<INpm, Npm>()
             .AddSingleton(new BlobContainerClient(config.GetConnectionString("blob-storage"), "apps"))
             .AddSingleton<IDeploymentFilesStorage, DeploymentFileAzureBlobStorage>()
             .AddRavenDb(config)
-            .AddKeyedSingleton<IGrainStorage, RavenDbGrainStateStorage>(DbStorageName)
             .AddRedis(config)
-            .AddKeyedSingleton<IGrainStorage, RedisGrainStateStorage>(CacheStorageName);
+            .AddGrainStorages();
 
-    private static IServiceCollection AddDirectoriesCreator(this IServiceCollection services, IConfiguration config)
+    private static IServiceCollection AddDirectoriesManager(this IServiceCollection services, IConfiguration config)
     {
         var directoriesConfig = new DirectoriesConfig();
         config.GetSection(nameof(DirectoriesConfig)).Bind(directoriesConfig);
@@ -36,4 +35,8 @@ public static class ServiceCollectionExtensions
             .AddSingleton(directoriesConfig)
             .AddHostedService<DirectoriesManager>();
     }
+
+    private static IServiceCollection AddGrainStorages(this IServiceCollection services) => services
+        .AddKeyedSingleton<IGrainStorage, RavenDbGrainStateStorage>(DbStorageName)
+        .AddKeyedSingleton<IGrainStorage, RedisGrainStateStorage>(CacheStorageName);
 }

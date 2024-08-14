@@ -1,10 +1,10 @@
 using System.Diagnostics;
 
-namespace Vercel.Copycat.Server.Core;
+namespace Vercel.Copycat.Server.Deployments.Workers;
 
-public class Cli
+public static class Cli
 {
-    public async Task<string> Execute(string command, string pathWhereToExecute)
+    public static async Task<string> Execute(string command, string pathWhereToExecute)
     {
         using var process = new Process();
         var startInfo = new ProcessStartInfo

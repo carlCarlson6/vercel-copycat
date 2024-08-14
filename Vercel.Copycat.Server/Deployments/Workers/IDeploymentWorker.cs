@@ -1,8 +1,7 @@
 using Orleans.Concurrency;
-using Vercel.Copycat.Server.Core;
 using Vercel.Copycat.Server.Projects;
 
-namespace Vercel.Copycat.Server.Deployments;
+namespace Vercel.Copycat.Server.Deployments.Workers;
 
 [Alias(nameof(IDeploymentWorker))]
 public interface IDeploymentWorker : IGrainWithIntegerKey
@@ -47,8 +46,8 @@ public class DeploymentWorker(
     }
 }
 
-[GenerateSerializer]
+[Alias(nameof(ExecutedDeploymentInfo)), GenerateSerializer]
 public record ExecutedDeploymentInfo(GitCommitInfo GitCommitInfo, List<string> FileNames);
 
-[GenerateSerializer]
+[Alias(nameof(ExecuteDeploymentCommand)), GenerateSerializer]
 public record ExecuteDeploymentCommand(Guid DeploymentId, RepoInfo RepoInfo);

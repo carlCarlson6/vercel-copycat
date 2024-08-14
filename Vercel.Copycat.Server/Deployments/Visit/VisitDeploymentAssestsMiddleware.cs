@@ -11,7 +11,7 @@ public class VisitDeploymentAssestsMiddleware(IGrainFactory grains) : IMiddlewar
             return;
         }
 
-        if (context.Request.Path.Value!.StartsWith("api")|| context.Request.Path.Value.StartsWith("apps"))
+        if (context.Request.Path.Value!.StartsWith("/api")|| context.Request.Path.Value.StartsWith("/apps"))
         {
             await next(context);
             return;
@@ -20,9 +20,7 @@ public class VisitDeploymentAssestsMiddleware(IGrainFactory grains) : IMiddlewar
         var maybeDeploymentFile = await grains
             .GetGrain<IVisitDeployment>(0)
             .GetDeploymentFile(Guid.Parse(projectId), context.Request.Path);
-        var result = maybeDeploymentFile is null
-            ? Results.NotFound()
-            : Results.Redirect(maybeDeploymentFile.FileUri.ToString(), preserveMethod: false);
+        var result = await maybeDeploymentFile.ToApiResponse();
         await result.ExecuteAsync(context);
     }
 }

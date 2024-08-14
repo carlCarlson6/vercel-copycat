@@ -1,6 +1,7 @@
 using Azure.Storage.Blobs;
+using Vercel.Copycat.Server.Deployments.Workers;
 
-namespace Vercel.Copycat.Server.Core;
+namespace Vercel.Copycat.Server.Deployments;
 
 public interface IDeploymentFilesStorage
 {

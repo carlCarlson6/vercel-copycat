@@ -1,4 +1,4 @@
-namespace Vercel.Copycat.Server.Core;
+namespace Vercel.Copycat.Server.Deployments.Workers;
 
 public class DirectoriesManager(DirectoriesConfig config) : BackgroundService
 {

@@ -5,7 +5,6 @@ namespace Vercel.Copycat.Server.Deployments.Visit;
 [Alias(nameof(IVisitDeployment))]
 public interface IVisitDeployment : IGrainWithIntegerKey
 {
-    // TODO - review returning IResult it does not work well with orleans
     [Alias(nameof(GetDeploymentFile))]
     Task<DeploymentFile?> GetDeploymentFile(Guid projectId, string file);
 }

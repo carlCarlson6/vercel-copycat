@@ -1,13 +1,12 @@
 using Orleans.Concurrency;
 using Orleans.Runtime;
-using Vercel.Copycat.Server.Core;
 using Vercel.Copycat.Server.Deployments;
 using static System.String;
 using static Vercel.Copycat.Server.Infrastructure.ServiceCollectionExtensions;
 
 namespace Vercel.Copycat.Server.Projects;
 
-[Alias("Vercel.Copycat.Server.Projects.IProject")]
+[Alias(nameof(IProject))]
 public interface IProject : IGrainWithGuidKey
 {
     [Alias(nameof(Create))]
@@ -17,7 +16,6 @@ public interface IProject : IGrainWithGuidKey
     Task Handle(DeploymentCompleted deploymentCompleted);
 }
 
-// ReSharper disable once UnusedType.Global
 public class Project(
     [PersistentState(
         stateName: "project-status", 
@@ -36,14 +34,14 @@ public class Project(
         if (IsNullOrWhiteSpace(repoUrl) || IsNullOrWhiteSpace(projectName))
         {
             logger.LogWarning("missing data on the request");
-            return new CreateProjectResponse(CreateProjectResponseResult.MissingData, null);
+            return new CreateProjectResponse(CreateProjectResponseResult.MissingData, ProjectCreated.Default);
         }
         
-        var projectCreated = new ProjectCreated(
-            Guid.NewGuid(), 
-            this.GetGrainId().GetGuidKey(),
-            DateTime.UtcNow, 
-            new RepoInfo(repoUrl, buildOutputPath));
+        var projectCreated = ProjectCreated.Default with
+        {
+            ProjectId = this.GetGrainId().GetGuidKey(),
+            RepoInfo = new RepoInfo(repoUrl, buildOutputPath) 
+        };;
         persistentProjectState.State = new ProjectStatus(
             projectName, 
             projectCreated.RepoInfo, 
@@ -76,8 +74,3 @@ public class Project(
         logger.LogInformation("state updated with last deployment status");
     }
 }
-
-public record ProjectStatus(string Name, RepoInfo RepoInfo, Guid? CurrentDeploymentId, IEnumerable<IEvent> Events);
-
-[GenerateSerializer]
-public record RepoInfo(string RepoUrl, string BuildOutputPath);

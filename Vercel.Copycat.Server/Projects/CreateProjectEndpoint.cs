@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Vercel.Copycat.Server.Core;
 
 namespace Vercel.Copycat.Server.Projects;
 
@@ -13,8 +12,7 @@ public static class CreateProjectEndpoint
 
     private static async Task<IResult> Handler([FromServices] IGrainFactory grains, [FromBody] CreateProjectRequest body)
     {
-        var project = grains.GetGrain<IProject>(Guid.NewGuid());
-        var response = await project.Create(body);
+        var response = await grains.GetGrain<IProject>(Guid.NewGuid()).Create(body);
         return response.Result switch
         {
             CreateProjectResponseResult.ProjectCreated => Results.Created(response.Created!.ProjectId.ToString(), new
@@ -28,11 +26,11 @@ public static class CreateProjectEndpoint
     }
 }
 
-[GenerateSerializer]
+[Alias(nameof(CreateProjectRequest)), GenerateSerializer]
 public record CreateProjectRequest(string RepoUrl, string Name, string BuildOutputPath = "build");
 
-[GenerateSerializer]
-public record CreateProjectResponse(CreateProjectResponseResult Result, ProjectCreated? Created);
+[Alias(nameof(CreateProjectResponse)), GenerateSerializer]
+public record CreateProjectResponse(CreateProjectResponseResult Result, ProjectCreated Created);
 
 [GenerateSerializer]
 public enum CreateProjectResponseResult

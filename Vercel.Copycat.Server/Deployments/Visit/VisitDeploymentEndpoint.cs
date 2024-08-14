@@ -17,9 +17,7 @@ public static class VisitDeploymentEndpoint
             .GetGrain<IVisitDeployment>(0)
             .GetDeploymentFile(projectId, "index.html");
         ctx.Response.Cookies.Append("visit-deployment", projectId.ToString());
-        // TODO redirect does not work, back to return to file
-        return maybeDeploymentFile is null
-            ? Results.NotFound()
-            : Results.Redirect(maybeDeploymentFile.FileUri.ToString(), preserveMethod: false);
+        var result = await maybeDeploymentFile.ToApiResponse();
+        return result;
     }
 }

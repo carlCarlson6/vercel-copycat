@@ -1,6 +1,6 @@
-using Vercel.Copycat.Server.Projects;
+using Vercel.Copycat.Server.Deployments.Workers;
 
-namespace Vercel.Copycat.Server.Core;
+namespace Vercel.Copycat.Server.Projects;
 
 public interface IEvent
 {
@@ -10,16 +10,20 @@ public interface IEvent
     public string Type { get; }
 }
 
-[GenerateSerializer]
+[Alias(nameof(ProjectCreated)), GenerateSerializer]
 public record ProjectCreated(
     Guid EventId, 
     Guid ProjectId,
     DateTime AtUtc,
     RepoInfo RepoInfo, 
     string Type = nameof(ProjectCreated)
-) : IEvent;
+) : IEvent
+{
+    public static ProjectCreated Default =>
+        new(Guid.NewGuid(), new Guid(), DateTime.UtcNow, new RepoInfo(string.Empty, string.Empty));
+}
 
-[GenerateSerializer]
+[Alias(nameof(DeploymentCompleted)), GenerateSerializer]
 public record DeploymentCompleted(
     Guid EventId, 
     Guid ProjectId,

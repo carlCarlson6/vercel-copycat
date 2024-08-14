@@ -1,6 +1,8 @@
+using Azure.Storage.Blobs;
+using HeyRed.Mime;
 using Orleans.Concurrency;
 using Orleans.Runtime;
-using Vercel.Copycat.Server.Core;
+using Vercel.Copycat.Server.Deployments.Workers;
 using Vercel.Copycat.Server.Projects;
 using static Vercel.Copycat.Server.Infrastructure.ServiceCollectionExtensions;
 
@@ -20,7 +22,7 @@ public interface IDeployment : IGrainWithGuidKey
 }
 
 [Alias(nameof(DeploymentFile)), GenerateSerializer]
-public record DeploymentFile(Uri FileUri);
+public record DeploymentFile(Uri BlobUri, string ContentType);
 
 public class Deployment(
     [PersistentState(
@@ -63,21 +65,23 @@ public class Deployment(
         logger.LogInformation("deployment completed");
     }
 
-    public async Task<DeploymentFile?> GetFile(string fileName)
+    public Task<DeploymentFile?> GetFile(string fileName)
     {
         logger.LogInformation("requested file {FileName} for deployment", fileName);
-        if (!persistentStateFiles.State.Contains(fileName))
+        
+        var startsWithSlash = fileName.StartsWith('/');
+        var formatedFileName = startsWithSlash ? fileName[1..] : fileName;
+        
+        if (!persistentStateFiles.State.Contains(formatedFileName))
         {
             logger.LogWarning("no file for the deployment");
-            return null;
+            return Task.FromResult<DeploymentFile?>(null);
         } 
         
         logger.LogInformation("downloading file");
-        var blob = deploymentFilesStorage.GetBlob(this.GetGrainId().GetGuidKey(), fileName);
-        // TODO not download just redirect
-        var blobStream = await blob.DownloadStreamingAsync(); 
+        var blob = deploymentFilesStorage.GetBlob(this.GetGrainId().GetGuidKey(), formatedFileName);
         logger.LogInformation("returning stream to the client");
-        return new DeploymentFile(blob.Uri);
+        return Task.FromResult<DeploymentFile?>(new DeploymentFile(blob.Uri, GetContentType(blob)));
     }
 
     public override Task OnActivateAsync(CancellationToken ct)
@@ -85,6 +89,12 @@ public class Deployment(
         if (!persistentStateFiles.RecordExists)
             persistentStateFiles.State = [];
         return base.OnActivateAsync(ct);
+    }
+    
+    private static string GetContentType(BlobClient blob)
+    {
+        var fileExtension = blob.Name.Split(".").LastOrDefault() ?? string.Empty;
+        return MimeTypesMap.GetMimeType(fileExtension);
     }
 }
 

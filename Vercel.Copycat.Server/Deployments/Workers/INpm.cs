@@ -1,4 +1,4 @@
-namespace Vercel.Copycat.Server.Core;
+namespace Vercel.Copycat.Server.Deployments.Workers;
 
 public interface INpm
 {
@@ -6,13 +6,13 @@ public interface INpm
     Task BuildProject(Guid deploymentId);
 }
 
-public class Npm(Cli cli, DirectoriesManager directories) : INpm
+public class Npm(DirectoriesManager directories) : INpm
 {
-    public Task InstallDependencies(Guid deploymentId) => cli.Execute(
+    public Task InstallDependencies(Guid deploymentId) => Cli.Execute(
         "npm i", 
         directories.BuildPath(deploymentId));
     
-    public Task BuildProject(Guid deploymentId) => cli.Execute(
+    public Task BuildProject(Guid deploymentId) => Cli.Execute(
         "npm run build",
         directories.BuildPath(deploymentId));
 }
