@@ -17,11 +17,13 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.Orleans.Server" Version="8.2.0" />
+      <PackageReference Include="Microsoft.Orleans.Core" Version="7.2.6" />
+      <PackageReference Include="Microsoft.Orleans.Server" Version="7.2.6" />
       <PackageReference Include="MimeTypesMap" Version="1.0.8" />
       <PackageReference Include="NRedisStack" Version="0.12.0" />
       <PackageReference Include="OneOf" Version="3.0.263" />
       <PackageReference Include="OneOf.SourceGenerator" Version="3.0.263" />
+      <PackageReference Include="RavenDB.Client" Version="6.0.105" />
       <PackageReference Include="Rebus" Version="8.2.2" />
       <PackageReference Include="Rebus.AzureQueues" Version="4.0.0" />
       <PackageReference Include="Rebus.ServiceProvider" Version="10.1.1" />

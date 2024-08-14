@@ -1,6 +1,5 @@
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
-using OneOf;
 using Vercel.Copycat.Server.Core;
 
 namespace Vercel.Copycat.Server.Projects;
@@ -13,22 +12,29 @@ public static class CreateProjectEndpoint
         pattern: Route,
         handler: async ([FromServices] IGrainFactory grains, [FromBody] CreateProjectRequest body) =>
     {
-        var response = await grains.GetGrain<IProject>(Guid.NewGuid()).Create(body); 
-        return response.Match(
-            created     => Results.Created(created.ProjectId.ToString(), null),
-            missingData => Results.BadRequest(),
-            project     => Results.Problem());
+        var response = await grains.GetGrain<IProject>(Guid.NewGuid()).Create(body);
+        return response.Result switch
+        {
+            CreateProjectResponseResult.ProjectCreated => Results.Created(response.Created!.ProjectId.ToString(), new
+            {
+                ProjectId = response.Created!.ProjectId.ToString()
+            }),
+            CreateProjectResponseResult.MissingData => Results.BadRequest(),
+            CreateProjectResponseResult.Problem => Results.Problem(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
     });
 }
 
+[GenerateSerializer]
 public record CreateProjectRequest(string RepoUrl, string Name, string BuildOutputPath = "build") : IRequest<CreateProjectResponse>;
 
-[GenerateOneOf]
-public partial class CreateProjectResponse : OneOfBase<
-    ProjectCreated, 
-    MissingData, 
-    ProblemCreatingProject
->;
+[GenerateSerializer]
+public record CreateProjectResponse(CreateProjectResponseResult Result, ProjectCreated? Created);
 
-public readonly struct MissingData;
-public readonly struct ProblemCreatingProject;
+public enum CreateProjectResponseResult
+{
+    ProjectCreated,
+    MissingData,
+    Problem
+}

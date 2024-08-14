@@ -2,8 +2,10 @@ using Orleans.Concurrency;
 
 namespace Vercel.Copycat.Server.Deployments.Visit;
 
+[Alias(nameof(IVisitDeployment))]
 public interface IVisitDeployment : IGrainWithIntegerKey
 {
+    [Alias(nameof(GetDeploymentFile))]
     Task<IResult> GetDeploymentFile(Guid projectId, string file);
 }
 
@@ -18,6 +20,6 @@ public class VisitDeployment(IGrainFactory grains, HttpContext ctx) : Grain, IVi
         var deploymentFile = await deployment.GetFile(file);
         return deploymentFile is null
             ? Results.NotFound()
-            : Results.File(deploymentFile.FileStream, deploymentFile.ContentType);
+            : Results.Redirect(deploymentFile.FileUri.ToString(), preserveMethod: true); // TODO - use redirect
     }
 }

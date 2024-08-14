@@ -1,15 +1,14 @@
 using System.Text;
-using static System.String;
 using StackExchange.Redis;
 
-namespace Vercel.Copycat.Server.Infrastructure;
+namespace Vercel.Copycat.Server.Infrastructure.Redis;
 
 public class RedisConfig
 {
-    public string UserName { get; set; } = Empty;
-    public string HostName { get; set; } = Empty;
-    public string Password { get; set; } = Empty;
-    public string Port { get; set; } = Empty;
+    public string UserName { get; set; } = string.Empty;
+    public string HostName { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string Port { get; set; } = string.Empty;
 }
 
 public static class Redis
@@ -28,8 +27,6 @@ public static class Redis
             .ToString();
         
         var multiplexer = ConnectionMultiplexer.Connect(connection);
-        return services
-            .AddSingleton<IDatabase>(_ => multiplexer.GetDatabase())
-            .AddSingleton<ISubscriber>(_ => multiplexer.GetSubscriber());
+        return services.AddSingleton<IDatabase>(_ => multiplexer.GetDatabase());
     }
 }

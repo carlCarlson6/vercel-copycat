@@ -1,5 +1,6 @@
 namespace Vercel.Copycat.Server.Core;
 
+[GenerateSerializer]
 public record GitCommitInfo(string Hash, string Message);
 
 public interface IGit
@@ -7,7 +8,7 @@ public interface IGit
     Task<GitCommitInfo> Clone(Guid deploymentId, string repoUrl);
 }
 
-public class GitCli(Cli cli, DirectoriesConfig directories) : IGit
+public class GitCli(Cli cli, DirectoriesManager directories) : IGit
 {
     public async Task<GitCommitInfo> Clone(Guid deploymentId, string repoUrl)
     {
@@ -19,13 +20,13 @@ public class GitCli(Cli cli, DirectoriesConfig directories) : IGit
     
     private async Task ExecuteClone(Guid deploymentId, string repoUrl) => await cli.Execute(
         $"git clone {repoUrl} .", 
-        $"{directories.GitDirectory}/{deploymentId}");
+        directories.BuildPath(deploymentId));
 
     private Task<string> ReadCurrentHash(Guid deploymentId) => cli.Execute(
         "git rev-parse HEAD", 
-        $"{directories.GitDirectory}/{deploymentId}");
+        directories.BuildPath(deploymentId));
 
     private Task<string> ReadCurrentCommitMessage(Guid deploymentId) => cli.Execute(
         "git log -1 --pretty=%B", 
-        $"{directories.GitDirectory}/{deploymentId}");
+        directories.BuildPath(deploymentId));
 }

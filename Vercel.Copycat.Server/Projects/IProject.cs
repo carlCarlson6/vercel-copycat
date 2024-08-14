@@ -1,7 +1,9 @@
 using Orleans.Concurrency;
+using Orleans.Runtime;
 using Vercel.Copycat.Server.Core;
 using Vercel.Copycat.Server.Deployments;
 using static System.String;
+using static Vercel.Copycat.Server.Infrastructure.ServiceCollectionExtensions;
 
 namespace Vercel.Copycat.Server.Projects;
 
@@ -18,7 +20,7 @@ public interface IProject : IGrainWithGuidKey
 public class Project(
     [PersistentState(
         stateName: "project-status", 
-        storageName: "projects")
+        storageName: DbStorageName)
     ] IPersistentState<ProjectStatus> persistentProjectState,
     IGrainFactory grains,
     ILogger<Project> logger
@@ -33,31 +35,34 @@ public class Project(
         if (IsNullOrWhiteSpace(repoUrl) || IsNullOrWhiteSpace(projectName))
         {
             logger.LogWarning("missing data on the request");
-            return new MissingData();
+            return new CreateProjectResponse(CreateProjectResponseResult.MissingData, null);
         }
         
         var projectCreated = new ProjectCreated(
             Guid.NewGuid(), 
             this.GetGrainId().GetGuidKey(),
             DateTime.UtcNow, 
-            new RepoInfo(projectName, buildOutputPath));
+            new RepoInfo(repoUrl, buildOutputPath));
         persistentProjectState.State = new ProjectStatus(
-            repoUrl, 
+            projectName, 
             projectCreated.RepoInfo, 
             null, 
             [projectCreated]
         );
         await persistentProjectState.WriteStateAsync();
         
+        logger.LogInformation("project created dispatching event");
         await grains
             .GetGrain<IDeployment>(Guid.NewGuid())
             .Handle(projectCreated);
         
-        return projectCreated;
+        logger.LogInformation("project creation completed");
+        return new CreateProjectResponse(CreateProjectResponseResult.ProjectCreated, projectCreated);
     }
 
     public async Task Handle(DeploymentCompleted deploymentCompleted)
     {
+        logger.LogInformation("handling deployment completed event");
         persistentProjectState.State = persistentProjectState.State with
         {
             CurrentDeploymentId = deploymentCompleted.DeploymentId,
@@ -67,8 +72,11 @@ public class Project(
         await grains
             .GetGrain<ICurrentDeployment>(this.GetGrainId().GetGuidKey())
             .SetDeployment(deploymentCompleted.DeploymentId);
+        logger.LogInformation("state updated with last deployment status");
     }
 }
 
 public record ProjectStatus(string Name, RepoInfo RepoInfo, Guid? CurrentDeploymentId, IEnumerable<IEvent> Events);
+
+[GenerateSerializer]
 public record RepoInfo(string RepoUrl, string BuildOutputPath);

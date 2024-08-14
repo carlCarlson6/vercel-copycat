@@ -1,4 +1,3 @@
-using Azure.Storage.Blobs;
 using Orleans.Concurrency;
 using Vercel.Copycat.Server.Core;
 using Vercel.Copycat.Server.Projects;
@@ -15,9 +14,10 @@ public interface IDeploymentWorker : IGrainWithIntegerKey
 [StatelessWorker(maxLocalWorkers: 3)]
 public class DeploymentWorker(
     IGit git,
-    IBuilder builder,
+    INpm npm,
     IDeploymentFilesStorage storage,
-    DirectoriesManager directoriesManager
+    DirectoriesManager directoriesManager,
+    ILogger<DeploymentWorker> logger
 ) 
     : Grain, IDeploymentWorker
 {
@@ -25,15 +25,30 @@ public class DeploymentWorker(
     {
         var (deploymentId, (repoUrl, buildOutputPath)) = command;
         
+        logger.LogInformation("creating deployment folder on working directory");
         directoriesManager.Create(deploymentId);
+        
+        logger.LogInformation("cloning repo");
         var gitCommitInfo = await git.Clone(deploymentId, repoUrl);
-        await builder.BuildProject(deploymentId);
+        
+        logger.LogInformation("installing dependencies");
+        await npm.InstallDependencies(deploymentId);
+        
+        logger.LogInformation("building code");
+        await npm.BuildProject(deploymentId);
+        
+        logger.LogInformation("uploading files");
         var uploadedFiles = await storage.Upload(deploymentId, buildOutputPath);
+        
+        logger.LogInformation("cleaning up local resources");
         directoriesManager.Delete(deploymentId);
-        return new ExecutedDeploymentInfo(gitCommitInfo, uploadedFiles);
+        
+        return new ExecutedDeploymentInfo(gitCommitInfo, uploadedFiles.Keys.ToList());
     }
 }
 
-public record ExecutedDeploymentInfo(GitCommitInfo GitCommitInfo, Dictionary<string, BlobClient> DeploymentFiles);
+[GenerateSerializer]
+public record ExecutedDeploymentInfo(GitCommitInfo GitCommitInfo, List<string> FileNames);
 
+[GenerateSerializer]
 public record ExecuteDeploymentCommand(Guid DeploymentId, RepoInfo RepoInfo);

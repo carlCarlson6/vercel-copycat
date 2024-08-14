@@ -10,6 +10,7 @@ public interface IEvent
     public string Type { get; }
 }
 
+[GenerateSerializer]
 public record ProjectCreated(
     Guid EventId, 
     Guid ProjectId,
@@ -18,6 +19,7 @@ public record ProjectCreated(
     string Type = nameof(ProjectCreated)
 ) : IEvent;
 
+[GenerateSerializer]
 public record DeploymentCompleted(
     Guid EventId, 
     Guid ProjectId,

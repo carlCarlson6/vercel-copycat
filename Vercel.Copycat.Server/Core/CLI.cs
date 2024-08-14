@@ -26,7 +26,7 @@ public class Cli
         await process.StandardInput.WriteLineAsync("exit");
             
         var standardOutput = await process.StandardOutput.ReadToEndAsync();
-        _ = await process.StandardError.ReadToEndAsync();
+        var errorOutput = await process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync();
 
         return standardOutput;

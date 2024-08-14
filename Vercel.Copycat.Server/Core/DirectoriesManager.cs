@@ -5,7 +5,7 @@ public class DirectoriesManager(DirectoriesConfig config) : BackgroundService
     public void Create(Guid id) => Directory.CreateDirectory(BuildPath(id));
     public void Delete(Guid id) => Directory.Delete(BuildPath(id), true);
 
-    private string BuildPath(Guid projectId) => $"{config.GitDirectory}/{projectId}";
+    public string BuildPath(Guid projectId) => $"{config.GitDirectory}/{projectId}";
     
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {

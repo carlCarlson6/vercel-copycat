@@ -1,9 +1,6 @@
 namespace Vercel.Copycat.Server.Deployments.Visit;
 
-public class VisitDeploymentAssestsMiddleware(
-    IGrainFactory grains
-) 
-    : IMiddleware
+public class VisitDeploymentAssestsMiddleware(IGrainFactory grains) : IMiddleware
 {
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
