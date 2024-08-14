@@ -19,7 +19,7 @@ public class RedisGrainStateStorage(
             return;
         }
         
-        grainState.RecordExists = false;
+        grainState.RecordExists = true;
         grainState.State = JsonSerializer.Deserialize<T>(data!)!;
     }
 

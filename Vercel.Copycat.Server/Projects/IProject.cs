@@ -7,7 +7,7 @@ using static Vercel.Copycat.Server.Infrastructure.ServiceCollectionExtensions;
 
 namespace Vercel.Copycat.Server.Projects;
 
-[Alias(nameof(IProject))]
+[Alias("Vercel.Copycat.Server.Projects.IProject")]
 public interface IProject : IGrainWithGuidKey
 {
     [Alias(nameof(Create))]
@@ -17,6 +17,7 @@ public interface IProject : IGrainWithGuidKey
     Task Handle(DeploymentCompleted deploymentCompleted);
 }
 
+// ReSharper disable once UnusedType.Global
 public class Project(
     [PersistentState(
         stateName: "project-status", 

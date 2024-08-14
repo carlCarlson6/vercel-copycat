@@ -9,17 +9,17 @@ namespace Vercel.Copycat.Server.Deployments;
 [Alias(nameof(IDeployment))]
 public interface IDeployment : IGrainWithGuidKey
 {
-    [OneWay, Alias(nameof(Handle))]
+    [OneWay, Alias($"{nameof(Handle)}.{nameof(ExecuteNewDeployment)}")]
     Task Handle(ExecuteNewDeployment command);
     
-    [OneWay, Alias(nameof(Handle))]
+    [OneWay, Alias($"{nameof(Handle)}.{nameof(ProjectCreated)}")]
     Task Handle(ProjectCreated projectCreated);
-
+    
     [Alias(nameof(GetFile))]
     Task<DeploymentFile?> GetFile(string fileName);
 }
 
-[GenerateSerializer]
+[Alias(nameof(DeploymentFile)), GenerateSerializer]
 public record DeploymentFile(Uri FileUri);
 
 public class Deployment(
@@ -88,4 +88,5 @@ public class Deployment(
     }
 }
 
+[Alias(nameof(ExecuteNewDeployment)), GenerateSerializer]
 public record ExecuteNewDeployment;

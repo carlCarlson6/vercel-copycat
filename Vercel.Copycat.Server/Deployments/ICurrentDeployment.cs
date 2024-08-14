@@ -30,7 +30,7 @@ public class CurrentDeployment(
 
     public Task<IDeployment> GetDeployment()
     {
-        var grain = grains.GetGrain<IDeployment>(this.GetGrainId().GetGuidKey());
+        var grain = grains.GetGrain<IDeployment>(persistentCurrentDeployment.State);
         return Task.FromResult(grain);
     }
 }

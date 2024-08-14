@@ -5,21 +5,17 @@ namespace Vercel.Copycat.Server.Deployments.Visit;
 [Alias(nameof(IVisitDeployment))]
 public interface IVisitDeployment : IGrainWithIntegerKey
 {
+    // TODO - review returning IResult it does not work well with orleans
     [Alias(nameof(GetDeploymentFile))]
-    Task<IResult> GetDeploymentFile(Guid projectId, string file);
+    Task<DeploymentFile?> GetDeploymentFile(Guid projectId, string file);
 }
 
 [StatelessWorker]
-public class VisitDeployment(IGrainFactory grains, HttpContext ctx) : Grain, IVisitDeployment
+public class VisitDeployment(IGrainFactory grains) : Grain, IVisitDeployment
 {
-    // TODO - check setting cookie on http context
-    // can be injected or needs to be passed down?
-    public async Task<IResult> GetDeploymentFile(Guid projectId, string file)
+    public async Task<DeploymentFile?> GetDeploymentFile(Guid projectId, string file)
     {
         var deployment = await grains.GetGrain<ICurrentDeployment>(projectId).GetDeployment();
-        var deploymentFile = await deployment.GetFile(file);
-        return deploymentFile is null
-            ? Results.NotFound()
-            : Results.Redirect(deploymentFile.FileUri.ToString(), preserveMethod: true); // TODO - use redirect
+        return await deployment.GetFile(file);
     }
 }

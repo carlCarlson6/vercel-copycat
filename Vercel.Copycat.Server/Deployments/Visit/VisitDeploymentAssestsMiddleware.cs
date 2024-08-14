@@ -17,9 +17,12 @@ public class VisitDeploymentAssestsMiddleware(IGrainFactory grains) : IMiddlewar
             return;
         }
 
-        var result = await grains
+        var maybeDeploymentFile = await grains
             .GetGrain<IVisitDeployment>(0)
             .GetDeploymentFile(Guid.Parse(projectId), context.Request.Path);
+        var result = maybeDeploymentFile is null
+            ? Results.NotFound()
+            : Results.Redirect(maybeDeploymentFile.FileUri.ToString(), preserveMethod: false);
         await result.ExecuteAsync(context);
     }
 }

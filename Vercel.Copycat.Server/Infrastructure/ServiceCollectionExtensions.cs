@@ -24,10 +24,9 @@ public static class ServiceCollectionExtensions
             .AddSingleton(new BlobContainerClient(config.GetConnectionString("blob-storage"), "apps"))
             .AddSingleton<IDeploymentFilesStorage, DeploymentFileAzureBlobStorage>()
             .AddRavenDb(config)
-            .AddSingletonNamedService<IGrainStorage, RavenDbGrainStateStorage>(DbStorageName) // TODO - check if work for singleton keyed service on alst version of orleans
+            .AddKeyedSingleton<IGrainStorage, RavenDbGrainStateStorage>(DbStorageName)
             .AddRedis(config)
-            .AddSingletonNamedService<IGrainStorage, RedisGrainStateStorage>(CacheStorageName)
-            .AddMediator(x => x.ServiceLifetime = ServiceLifetime.Singleton);
+            .AddKeyedSingleton<IGrainStorage, RedisGrainStateStorage>(CacheStorageName);
 
     private static IServiceCollection AddDirectoriesCreator(this IServiceCollection services, IConfiguration config)
     {

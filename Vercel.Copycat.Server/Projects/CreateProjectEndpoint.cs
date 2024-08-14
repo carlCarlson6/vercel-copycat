@@ -1,4 +1,3 @@
-using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Vercel.Copycat.Server.Core;
 
@@ -10,9 +9,12 @@ public static class CreateProjectEndpoint
     
     public static void MapCreateProjectEndpoint(this IEndpointRouteBuilder builder) => builder.MapPost(
         pattern: Route,
-        handler: async ([FromServices] IGrainFactory grains, [FromBody] CreateProjectRequest body) =>
+        handler: Handler);
+
+    private static async Task<IResult> Handler([FromServices] IGrainFactory grains, [FromBody] CreateProjectRequest body)
     {
-        var response = await grains.GetGrain<IProject>(Guid.NewGuid()).Create(body);
+        var project = grains.GetGrain<IProject>(Guid.NewGuid());
+        var response = await project.Create(body);
         return response.Result switch
         {
             CreateProjectResponseResult.ProjectCreated => Results.Created(response.Created!.ProjectId.ToString(), new
@@ -23,15 +25,16 @@ public static class CreateProjectEndpoint
             CreateProjectResponseResult.Problem => Results.Problem(),
             _ => throw new ArgumentOutOfRangeException()
         };
-    });
+    }
 }
 
 [GenerateSerializer]
-public record CreateProjectRequest(string RepoUrl, string Name, string BuildOutputPath = "build") : IRequest<CreateProjectResponse>;
+public record CreateProjectRequest(string RepoUrl, string Name, string BuildOutputPath = "build");
 
 [GenerateSerializer]
 public record CreateProjectResponse(CreateProjectResponseResult Result, ProjectCreated? Created);
 
+[GenerateSerializer]
 public enum CreateProjectResponseResult
 {
     ProjectCreated,
