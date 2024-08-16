@@ -4,14 +4,8 @@ public class VisitDeploymentAssestsMiddleware(IGrainFactory grains) : IMiddlewar
 {
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        context.Request.Cookies.TryGetValue("visit-deployment", out var projectId);
-        if (string.IsNullOrWhiteSpace(projectId))
-        {
-            await next(context);
-            return;
-        }
-
-        if (context.Request.Path.Value!.StartsWith("/api")|| context.Request.Path.Value.StartsWith("/apps"))
+        var (shouldSkipMiddleware, projectId) = ShouldSkipMiddlewareAction(context);
+        if (shouldSkipMiddleware)
         {
             await next(context);
             return;
@@ -19,8 +13,19 @@ public class VisitDeploymentAssestsMiddleware(IGrainFactory grains) : IMiddlewar
 
         var maybeDeploymentFile = await grains
             .GetGrain<IVisitDeployment>(0)
-            .GetDeploymentFile(Guid.Parse(projectId), context.Request.Path);
-        var result = await maybeDeploymentFile.ToApiResponse();
+            .GetDeploymentFile(projectId, context.Request.Path);
+        var result = await ApiResultsUtils.FormatApiResultFormDeploymentFile(maybeDeploymentFile);
         await result.ExecuteAsync(context);
+    }
+
+    private static (bool shouldSkipMiddlewareAction, Guid projectId) ShouldSkipMiddlewareAction(HttpContext context)
+    {
+        context.Request.Cookies.TryGetValue("visit-deployment", out var projectId);
+        var isProjectIdEmpty = string.IsNullOrWhiteSpace(projectId); 
+        var routeIsForApi = context.Request.Path.Value!.StartsWith("/api");
+        var routeIsForApps = context.Request.Path.Value.StartsWith("/apps");
+        return (
+            shouldSkipMiddlewareAction: isProjectIdEmpty || routeIsForApi || routeIsForApps,
+            projectId: isProjectIdEmpty ? new Guid(): Guid.Parse(projectId!));
     }
 }

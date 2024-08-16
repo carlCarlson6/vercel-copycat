@@ -8,6 +8,8 @@ public static class VisitDeploymentEndpoint
         pattern: "apps/{projectId:guid}",
         handler: Handler);
 
+    private const string AppEntryPoint = "index.html"; 
+    
     private static async Task<IResult> Handler(
         [FromServices] IGrainFactory grains,
         [FromRoute] Guid projectId,
@@ -15,9 +17,8 @@ public static class VisitDeploymentEndpoint
     {
         var maybeDeploymentFile = await grains
             .GetGrain<IVisitDeployment>(0)
-            .GetDeploymentFile(projectId, "index.html");
+            .GetDeploymentFile(projectId, AppEntryPoint);
         ctx.Response.Cookies.Append("visit-deployment", projectId.ToString());
-        var result = await maybeDeploymentFile.ToApiResponse();
-        return result;
+        return await ApiResultsUtils.FormatApiResultFormDeploymentFile(maybeDeploymentFile);
     }
 }

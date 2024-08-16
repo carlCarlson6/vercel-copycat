@@ -1,7 +1,6 @@
 using Azure.Storage.Blobs;
 using HeyRed.Mime;
 using Orleans.Concurrency;
-using Orleans.Runtime;
 using Vercel.Copycat.Server.Deployments.Workers;
 using Vercel.Copycat.Server.Projects;
 using static Vercel.Copycat.Server.Infrastructure.ServiceCollectionExtensions;
@@ -11,11 +10,8 @@ namespace Vercel.Copycat.Server.Deployments;
 [Alias(nameof(IDeployment))]
 public interface IDeployment : IGrainWithGuidKey
 {
-    [OneWay, Alias($"{nameof(Handle)}.{nameof(ExecuteNewDeployment)}")]
-    Task Handle(ExecuteNewDeployment command);
-    
-    [OneWay, Alias($"{nameof(Handle)}.{nameof(ProjectCreated)}")]
-    Task Handle(ProjectCreated projectCreated);
+    [OneWay, Alias($"{nameof(Handle)}.{nameof(ExecuteNewDeploymentCommand)}")]
+    Task Handle(ExecuteNewDeploymentCommand command);
     
     [Alias(nameof(GetFile))]
     Task<DeploymentFile?> GetFile(string fileName);
@@ -27,7 +23,7 @@ public record DeploymentFile(Uri BlobUri, string ContentType);
 public class Deployment(
     [PersistentState(
         stateName: "deployment-files", 
-        storageName: CacheStorageName )
+        storageName: CacheStorageName)
     ] IPersistentState<List<string>> persistentStateFiles,
     IGrainFactory grains,
     IDeploymentFilesStorage deploymentFilesStorage,
@@ -35,36 +31,31 @@ public class Deployment(
 ) 
     : Grain, IDeployment
 {
-    public Task Handle(ExecuteNewDeployment command)
+    public async Task Handle(ExecuteNewDeploymentCommand command)
     {
-        throw new NotImplementedException();
-    }
-
-    public async Task Handle(ProjectCreated projectCreated)
-    {
-        logger.LogInformation("handling project created");
+        var (projectId, repoInfo) = command;
+        logger.LogInformation("handling execute new deployment command");
         
-        var deploymentWorker = grains.GetGrain<IDeploymentWorker>(0);
-        var project = grains.GetGrain<IProject>(projectCreated.ProjectId);
         
-        logger.LogInformation("initiating first deployment");
-        var (gitCommitInfo, deploymentFiles) = await deploymentWorker
-            .Execute(new ExecuteDeploymentCommand(this.GetGrainId().GetGuidKey(), projectCreated.RepoInfo));
+        logger.LogInformation("initiating deployment");
+        var (gitCommitInfo, deploymentFiles) = await grains
+            .GetGrain<IDeploymentWorker>(0)
+            .Execute(new ExecuteDeploymentCommand(this.GetGrainId().GetGuidKey(), repoInfo));
         
         logger.LogInformation("updating deployment status");
         persistentStateFiles.State = deploymentFiles;
         await persistentStateFiles.WriteStateAsync();
-        
+
         logger.LogInformation("dispatching event deployment completed");
-        await project.Handle(new DeploymentCompleted(
-            Guid.NewGuid(),
-            projectCreated.ProjectId,
-            this.GetGrainId().GetGuidKey(),
-            DateTime.UtcNow, 
-            gitCommitInfo));
+        await grains.GetGrain<IProject>(projectId).Handle(DeploymentCompleted.Default with
+        {
+            ProjectId = projectId,
+            DeploymentId = this.GetGrainId().GetGuidKey(),
+            GitCommitInfo = gitCommitInfo
+        });
         logger.LogInformation("deployment completed");
     }
-
+    
     public Task<DeploymentFile?> GetFile(string fileName)
     {
         logger.LogInformation("requested file {FileName} for deployment", fileName);
@@ -98,5 +89,5 @@ public class Deployment(
     }
 }
 
-[Alias(nameof(ExecuteNewDeployment)), GenerateSerializer]
-public record ExecuteNewDeployment;
+[Alias(nameof(ExecuteNewDeploymentCommand)), GenerateSerializer]
+public record ExecuteNewDeploymentCommand(Guid ProjectId, RepoInfo RepoInfo);

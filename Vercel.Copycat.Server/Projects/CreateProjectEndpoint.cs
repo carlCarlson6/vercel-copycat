@@ -4,10 +4,8 @@ namespace Vercel.Copycat.Server.Projects;
 
 public static class CreateProjectEndpoint
 {
-    private const string Route = "api/projects";
-    
     public static void MapCreateProjectEndpoint(this IEndpointRouteBuilder builder) => builder.MapPost(
-        pattern: Route,
+        pattern: "api/projects",
         handler: Handler);
 
     private static async Task<IResult> Handler([FromServices] IGrainFactory grains, [FromBody] CreateProjectRequest body)
